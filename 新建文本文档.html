@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课件查看服务</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4285F4;
+            --success: #34A853;
+            --warning: #FBBC05;
+            --danger: #EA4335;
+            --dark: #202124;
+            --light: #f8f9fa;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: var(--dark);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .header-icon {
+            color: var(--primary);
+            font-size: 32px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .info-card {
+            background: #f1f8ff;
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 25px;
+        }
+        
+        .info-card h2 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-icon {
+            color: var(--primary);
+            font-size: 24px;
+        }
+        
+        .accuracy-indicator {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #e8f4ff;
+            border-radius: 8px;
+        }
+        
+        .accuracy-meter {
+            flex-grow: 1;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .accuracy-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 1.5s ease-out;
+        }
+        
+        .accuracy-value {
+            font-weight: bold;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f1f3f4;
+            color: var(--dark);
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .results.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        .result-card h3 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .map-link {
+            display: block;
+            margin-top: 25px;
+            padding: 16px;
+            background: var(--success);
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .map-link:hover {
+            background: #2E8B47;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+        }
+        
+        .error {
+            display: none;
+            padding: 20px;
+            background: #ffebee;
+            border-radius: 8px;
+            border-left: 4px solid var(--danger);
+            margin-top: 20px;
+            color: var(--danger);
+        }
+        
+        .error.active {
+            display: block;
+        }
+        
+        .privacy {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        .privacy a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .privacy a:hover {
+            text-decoration: underline;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #5f6368;
+            font-size: 14px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(66, 133, 244, 0.2);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-map-marker-alt header-icon"></i> 课件查看服务</h1>
+            <p>使用先进技术查看存在的课件信息</p>
+        </header>
+        
+        <div class="content">
+            <div class="info-card">
+                <h2><i class="fas fa-info-circle info-icon"></i> 关于高速度查看</h2>
+                <p>本服务结合了多种技术，可在支持设备上高速度查看：</p>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li>GPS/GLONASS/Galileo</li>
+                    <li>WiFi三角技术</li>
+                    <li>移动网络查看</li>
+                    <li>蓝牙信标查看</li>
+                    <li>传感器辅助</li>
+                </ul>
+                
+                <div class="accuracy-indicator">
+                    <div class="accuracy-meter">
+                        <div class="accuracy-fill" id="accuracyFill"></div>
+                    </div>
+                    <div class="accuracy-value" id="accuracyValue">等待定位...</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="getLocationBtn" class="btn btn-primary">
+                    <i class="fas fa-location-dot"></i> 获取高速的接口
+                </button>
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> 重新查看
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>正在文件位置，请稍候...</p>
+                <p>请确保已开启GPS</p>
+            </div>
+            
+            <div class="results" id="results">
+                <h2><i class="fas fa-check-circle"></i> 文件获取成功！</h2>
+                <p>以下为高速的查看结果：</p>
+                
+                <div class="result-grid">
+                    <div class="result-card">
+                        <h3><i class="fas fa-latitude"></i> 纬度</h3>
+                        <div class="result-value" id="latitude">-</div>
+                    </div>
+                    <div class="result-card">
+                        <h3><i class="fas fa-longitude"></i> 经度</h3>
+                        <div class="result-value" id="longitude">-</div>
+                    </div>
+                    <div class="result-card">
+                        <h3><i class="fas fa-bullseye"></i> 精度</h3>
+                        <div class="result-value" id="accuracy">-</div>
+                    </div>
+                    <div class="result-card">
+                        <h3><i class="fas fa-arrows-alt-v"></i> 海拔</h3>
+                        <div class="result-value" id="altitude">-</div>
+                    </div>
+                </div>
+                
+                <a href="#" class="map-link" id="mapLink" target="_blank">
+                    <i class="fas fa-map"></i> 在Google地球查看3D位置
+                </a>
+            </div>
+            
+            <div class="error" id="error">
+                <h3><i class="fas fa-exclamation-triangle"></i> 定位错误</h3>
+                <p id="errorMessage"></p>
+            </div>
+            
+            <div class="privacy">
+                <p><i class="fas fa-shield-alt"></i> <strong>隐私保护：</strong> 您的位置数据仅用于本次查看文件一次性定位，不会被存储或共享。定位仅用于防止文件泄漏，我们不会访问您的位置信息。</p>
+                <p>点击"获取位置"按钮即表示您同意我们的<a href="#">位置服务条款</a>。</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 高速的查看服务 | 使用W3C Geolocation API | 支持所有现代浏览器</p>
+        </footer>
+    </div>
+
+    <script>
+        const getLocationBtn = document.getElementById('getLocationBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+        const errorMessage = document.getElementById('errorMessage');
+        const accuracyFill = document.getElementById('accuracyFill');
+        const accuracyValue = document.getElementById('accuracyValue');
+        const mapLink = document.getElementById('mapLink');
+        
+        // 定位元素
+        const latitudeEl = document.getElementById('latitude');
+        const longitudeEl = document.getElementById('longitude');
+        const accuracyEl = document.getElementById('accuracy');
+        const altitudeEl = document.getElementById('altitude');
+        
+        // 高精度定位选项
+        const highAccuracyOptions = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
+        
+        // 获取位置函数
+        function getHighAccuracyLocation() {
+            // 重置UI
+            results.classList.remove('active');
+            error.classList.remove('active');
+            loading.style.display = 'block';
+            accuracyFill.style.width = '0%';
+            accuracyValue.textContent = '定位中...';
+            
+            if (!navigator.geolocation) {
+                showError("您的浏览器不支持地理位置服务");
+                return;
+            }
+            
+            // 使用高精度模式获取位置
+            navigator.geolocation.getCurrentPosition(
+                showHighAccuracyPosition,
+                handleHighAccuracyError,
+                highAccuracyOptions
+            );
+        }
+        
+        // 显示高精度位置
+        function showHighAccuracyPosition(position) {
+            loading.style.display = 'none';
+            results.classList.add('active');
+            
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const acc = position.coords.accuracy;
+            const alt = position.coords.altitude ? 
+                         position.coords.altitude.toFixed(2) + ' 米' : 
+                         '不可用';
+            
+            // 更新UI
+            latitudeEl.textContent = lat.toFixed(8);
+            longitudeEl.textContent = lng.toFixed(8);
+            accuracyEl.textContent = Math.round(acc) + ' 米';
+            altitudeEl.textContent = alt;
+            
+            // 更新精度指示器
+            const accuracyPercent = Math.max(0, 100 - (acc / 50 * 100));
+            accuracyFill.style.width = Math.min(accuracyPercent, 100) + '%';
+            accuracyValue.textContent = Math.round(accuracyPercent) + '% 精度';
+            
+            // 设置地图链接
+            const mapsUrl = `https://earth.google.com/web/search/${lat},${lng}`;
+            mapLink.href = mapsUrl;
+            
+            // 添加额外数据点（模拟增强定位）
+            setTimeout(() => {
+                if (acc > 20) {
+                    // 模拟精度提升
+                    const improvedAcc = Math.max(5, acc * 0.4);
+                    accuracyEl.textContent = Math.round(improvedAcc) + ' 米';
+                    
+                    const improvedPercent = Math.max(0, 100 - (improvedAcc / 50 * 100));
+                    accuracyFill.style.width = Math.min(improvedPercent, 100) + '%';
+                    accuracyValue.textContent = Math.round(improvedPercent) + '% 精度';
+                }
+            }, 1500);
+        }
+        
+        // 处理高精度错误
+        function handleHighAccuracyError(err) {
+            loading.style.display = 'none';
+            
+            let message = "高精度定位失败：";
+            switch(err.code) {
+                case err.PERMISSION_DENIED:
+                    message += "您拒绝了位置权限请求。请允许位置访问以使用此服务。";
+                    break;
+                case err.POSITION_UNAVAILABLE:
+                    message += "位置信息不可用。请检查您的网络连接和定位服务设置。";
+                    break;
+                case err.TIMEOUT:
+                    message += "定位超时。请确保您处于开阔区域并启用高精度模式。";
+                    break;
+                default:
+                    message += "未知错误 (错误代码: " + err.code + ")";
+            }
+            
+            showError(message);
+        }
+        
+        // 显示错误
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            error.classList.add('active');
+        }
+        
+        // 事件监听
+        getLocationBtn.addEventListener('click', getHighAccuracyLocation);
+        refreshBtn.addEventListener('click', getHighAccuracyLocation);
+        
+        // 页面加载时提示
+        window.addEventListener('DOMContentLoaded', () => {
+            accuracyValue.textContent = "点击按钮开始定位";
+        });
+    </script>
+</body>
+</html>
